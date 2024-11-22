@@ -64,7 +64,7 @@ const ensureBookNotesTable = async () => {
         );
     `;
 
-    // Drop the trigger if it already exists and recreate it
+    // Create or replace the trigger safely
     const createTriggerQuery = `
         DO $$
         BEGIN
@@ -97,11 +97,11 @@ const ensureBookNotesTable = async () => {
     `;
 
     try {
-        // Create the table
+        // Execute the table creation query
         await db.query(createTableQuery);
         console.log("Ensured 'book_notes' table exists.");
 
-        // Create the trigger
+        // Execute the trigger creation query
         await db.query(createTriggerQuery);
         console.log("Ensured 'set_updated_at' trigger exists.");
     } catch (err) {
