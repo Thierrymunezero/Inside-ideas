@@ -50,14 +50,16 @@ app.use(express.static(join(__dirname, "public"))); // Serve static files
 
 app.use(
     session({
-        store: new PgSession({
-            pool: db, // Use the same PostgreSQL connection pool
+        store: new connectPgSimple({
+            pool: db, // PostgreSQL client pool
         }),
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
     })
 );
+
+
 
 // Multer setup for file uploads
 const upload = multer({ dest: "public/uploads/" });
