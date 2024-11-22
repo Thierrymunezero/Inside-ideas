@@ -30,19 +30,23 @@ let db;
 if (!db) {
 
 
+const pg = require('pg'); // Ensure you're importing 'pg'
+
 const db = new pg.Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: false, // No SSL for internal communication
+    ssl: {
+        rejectUnauthorized: false, // Allow self-signed certificates (useful for production hosts like Render)
+    },
 });
 
-    db.connect(err => {
-        if (err) {
-            console.error('Could not connect to the database', err);
-        } else {
-            console.log('Connected to the database');
-        }
-    });
-}
+db.connect(err => {
+    if (err) {
+        console.error('Could not connect to the database', err);
+    } else {
+        console.log('Connected to the database');
+    }
+});
+
 
 // Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
