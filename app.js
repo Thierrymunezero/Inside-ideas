@@ -59,45 +59,36 @@ const ensureBookNotesTable = async () => {
             takeaways TEXT,
             content TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     `;
+
+    // Trigger to update `updated_at` on row update
+    const createTriggerQuery = `
+        CREATE OR REPLACE FUNCTION update_updated_at_column()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            NEW.updated_at = CURRENT_TIMESTAMP;
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+
+        CREATE TRIGGER set_updated_at
+        BEFORE UPDATE ON book_notes
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+    `;
+
     try {
         await db.query(createTableQuery);
         console.log("Ensured 'book_notes' table exists.");
+        await db.query(createTriggerQuery);
+        console.log("Ensured 'updated_at' trigger is set.");
     } catch (err) {
         console.error("Error ensuring 'book_notes' table exists:", err);
     }
 };
 
-// Ensure the `user_admin` table exists and seed default admin
-const ensureUserAdminTable = async () => {
-    const createUserAdminTableQuery = `
-        CREATE TABLE IF NOT EXISTS user_admin (
-            id SERIAL PRIMARY KEY,
-            user_name VARCHAR(50) NOT NULL UNIQUE,
-            user_password VARCHAR(50) NOT NULL
-        );
-    `;
-
-    const seedAdminUserQuery = `
-        INSERT INTO user_admin (user_name, user_password)
-        VALUES ('thierry', '02')
-        ON CONFLICT (user_name) DO NOTHING;
-    `;
-
-    try {
-        // Create the `user_admin` table
-        await db.query(createUserAdminTableQuery);
-        console.log("Ensured 'user_admin' table exists.");
-
-        // Seed the default admin user
-        await db.query(seedAdminUserQuery);
-        console.log("Seeded default admin user: thierry.");
-    } catch (err) {
-        console.error("Error ensuring `user_admin` table or seeding admin user:", err);
-    }
-};
 
 // Call the functions to ensure tables
 ensureBookNotesTable();
@@ -137,7 +128,7 @@ const checkAuth = (req, res, next) => {
 
 // Authentication Page
 app.get("/auth", (req, res) => {
-    res.render("auth");
+    res.render("Auth");
 });
 
 // Login for admin
