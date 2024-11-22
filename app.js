@@ -48,6 +48,7 @@ const pgPool = new Pool({
 });
 
 // Ensure the `book_notes` table exists
+// Ensure the `book_notes` table exists
 const ensureBookNotesTable = async () => {
     const createTableQuery = `
         CREATE TABLE IF NOT EXISTS book_notes (
@@ -63,33 +64,50 @@ const ensureBookNotesTable = async () => {
         );
     `;
 
-    // Trigger to update `updated_at` on row update
+    // Drop the trigger if it already exists and recreate it
     const createTriggerQuery = `
-        CREATE OR REPLACE FUNCTION update_updated_at_column()
-        RETURNS TRIGGER AS $$
+        DO $$
         BEGIN
-            NEW.updated_at = CURRENT_TIMESTAMP;
-            RETURN NEW;
-        END;
-        $$ LANGUAGE plpgsql;
+            -- Check if the trigger already exists
+            IF EXISTS (
+                SELECT 1 
+                FROM pg_trigger 
+                WHERE tgname = 'set_updated_at'
+            ) THEN
+                -- Drop the existing trigger
+                DROP TRIGGER set_updated_at ON book_notes;
+            END IF;
 
-        CREATE TRIGGER set_updated_at
-        BEFORE UPDATE ON book_notes
-        FOR EACH ROW
-        EXECUTE FUNCTION update_updated_at_column();
+            -- Create or replace the function
+            CREATE OR REPLACE FUNCTION update_updated_at_column()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = CURRENT_TIMESTAMP;
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+
+            -- Create the new trigger
+            CREATE TRIGGER set_updated_at
+            BEFORE UPDATE ON book_notes
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+        END;
+        $$;
     `;
 
     try {
+        // Create the table
         await db.query(createTableQuery);
         console.log("Ensured 'book_notes' table exists.");
+
+        // Create the trigger
         await db.query(createTriggerQuery);
-        console.log("Ensured 'updated_at' trigger is set.");
+        console.log("Ensured 'set_updated_at' trigger exists.");
     } catch (err) {
         console.error("Error ensuring 'book_notes' table exists:", err);
     }
 };
-
-
 
 // Ensure the `user_admin` table exists and seed default admin
 const ensureUserAdminTable = async () => {
@@ -120,12 +138,10 @@ const ensureUserAdminTable = async () => {
     }
 };
 
-// Call the function to ensure the table
-
-
 // Call the functions to ensure tables
 ensureBookNotesTable();
 ensureUserAdminTable();
+
 
 // Use session middleware
 app.use(
