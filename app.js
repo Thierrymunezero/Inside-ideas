@@ -26,8 +26,14 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views')); // Set views directory
 
-// Database connection
-let db;
+
+
+const db = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+});
+
+
 if (!db) {
     db = new pg.Client({
         connectionString: process.env.DATABASE_URL,
