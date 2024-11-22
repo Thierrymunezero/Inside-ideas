@@ -7,10 +7,8 @@ import { dirname, join } from 'path';
 import ip from "ip";
 import fs from "fs";
 import path from "path";
-import session from "express-session";
 import bcrypt from "bcryptjs";
 import dotenv from 'dotenv';
-import connectPgSimple from 'connect-pg-simple';
 
 // Load environment variables
 dotenv.config();
@@ -54,14 +52,6 @@ app.use(express.static(join(__dirname, "public"))); // Serve static files
 const upload = multer({ dest: "public/uploads/" });
 
 // Session configuration using PostgreSQL store
-app.use(session({
-    store: new PgSession({
-        conString: process.env.DATABASE_URL,
-    }),
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-}));
 
 // Check authentication middleware
 const checkAuth = (req, res, next) => {
