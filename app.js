@@ -48,17 +48,19 @@ const pgPool = new Pool({
 });
 
 // Use session middleware
+
+
 app.use(session({
     store: new PgSession({
         pool: pgPool,
-        tableName: 'session', // Optional: specify your session table name
+        tableName: 'session',
+        createTableIfMissing: true, // Automatically create the table if it doesn't exist
     }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false }, // Set to true if using HTTPS
 }));
-
 
 // Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
