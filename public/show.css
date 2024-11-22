@@ -1,0 +1,157 @@
+/* Global reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: #121212; /* Deep dark background for modern feel */
+  color: #e0e0e0; /* Light gray text for readability */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Main container */
+#book-detail-container {
+  max-width: 900px;
+  background-color: #1e1e1e; /* Slightly lighter dark container for contrast */
+  border-radius: 10px; /* Smooth rounded corners */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Strong shadow for depth */
+  padding: 30px;
+  overflow: hidden;
+}
+
+/* Header styles */
+#book-detail-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+#book-title {
+  font-size: 2.8em;
+  font-weight: 700;
+  color: #4caf50; /* Vibrant green for emphasis */
+  margin-bottom: 10px;
+}
+
+#book-read-date,
+#book-rating {
+  font-size: 1.1em;
+  color: #aaaaaa; /* Subtle gray for metadata */
+  margin: 5px 0;
+}
+
+/* Book cover image */
+#book-cover-section {
+  text-align: center;
+  margin: 30px 0;
+}
+
+#book-cover-image {
+  max-width: 100%;
+  border-radius: 10px; /* Rounded corners for modern design */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Gentle shadow */
+}
+
+/* Content section */
+#book-info-section h3 {
+  font-size: 1.8em;
+  font-weight: 600;
+  color: #80d4ff; /* Cool blue for headings */
+  margin-bottom: 15px;
+  border-bottom: 2px solid #333; /* Section divider for structure */
+  padding-bottom: 5px;
+}
+
+#takeaways-header,
+#content-header {
+  margin-top: 20px;
+}
+
+#takeaways-content,
+#content-full {
+  font-size: 1.1em;
+  line-height: 1.8;
+  color: #d0d0d0; /* Softer light gray for readability */
+  margin-bottom: 25px;
+}
+
+/* Button styles */
+#back-to-home-button {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  text-decoration: none; /* Removes underline from link */
+}
+
+#back-to-home-button button {
+  background-color: #4caf50; /* Vibrant green for primary action */
+  color: #ffffff; /* White text for contrast */
+  border: none;
+  border-radius: 5px;
+  padding: 12px 20px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#back-to-home-button button:hover {
+  background-color:  #004494;  /* Slightly darker blue on hover */
+  transform: translateY(-2px); /* Subtle lift effect */
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4); /* Glow effect */
+}
+
+/* Typography refinement */
+p {
+  margin-bottom: 15px;
+}
+
+h3 {
+  text-transform: capitalize; /* Elegant text transformation */
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  body {
+    padding: 15px;
+  }
+
+  #book-detail-container {
+    padding: 20px;
+  }
+
+  #book-title {
+    font-size: 2.2em;
+  }
+
+  #book-info-section h3 {
+    font-size: 1.5em;
+  }
+
+  #takeaways-content,
+  #content-full {
+    font-size: 1em;
+  }
+
+  #back-to-home-button button {
+    padding: 10px 15px;
+    font-size: 1em;
+  }
+}
+
+@media (max-width: 480px) {
+  #book-title {
+    font-size: 1.8em;
+  }
+
+  #back-to-home-button button {
+    font-size: 0.95em;
+    padding: 8px 12px;
+  }
+}

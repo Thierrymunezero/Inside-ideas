@@ -1,0 +1,170 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #1c1c1c; /* Background color */
+  color: #d8d8d8; /* Text color */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 900px;
+  width: 100%; /* Full width on smaller screens */
+  background-color: #2a2a2a; /* Darker container */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.5em;
+  color: #33cc33; /* Green color */
+  margin-bottom: 20px;
+  text-align: center; /* Center align */
+}
+
+.error-message {
+  color: #f44336; /* Red for error messages */
+  margin-bottom: 20px;
+  text-align: center; /* Center align */
+}
+
+form {
+  display: flex;
+  flex-direction: column; /* Stack vertically */
+}
+
+label {
+  margin-bottom: 5px;
+  font-weight: bold; /* Bold labels */
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+textarea,
+input[type="file"] {
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #333; /* Border for inputs */
+  border-radius: 4px; /* Rounded corners */
+  background-color: #3a3a3a; /* Darker background */
+  color: #d8d8d8; /* Text color */
+  width: 100%; /* Full width */
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  border-color: #33cc33; /* Highlight border on focus */
+  outline: none; /* Remove default outline */
+}
+
+textarea {
+  resize: vertical; /* Allow vertical resizing */
+  min-height: 100px; /* Minimum height */
+}
+
+/* css */
+
+
+
+
+button-container {
+  display: flex;
+  justify-content: space-between; /* Space between buttons */
+  margin-top: 20px; /* Space above button container */
+}
+
+button {
+  background-color:#28a745;; /* Navy green for Update button */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 20px; /* Increased padding for better touch targets */
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s; /* Smooth transition */
+  font-size: 1em; /* Consistent font size */
+  width: 48%; /* Slightly less than half to allow space between */
+}
+
+button:hover {
+  background-color: #004494; /* Darker navy blue on hover */
+  transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+.back-button {
+  background-color: #6c757d; /* Soft gray for Back to Home button */
+}
+
+.back-button:hover {
+  background-color: #5a6268; /* Darker gray on hover */
+}
+
+/* Optional: Add some responsive design */
+@media (max-width: 600px) {
+  button {
+      padding: 10px; /* Smaller padding on mobile */
+      font-size: 0.9em; /* Slightly smaller font size */
+  }
+}
+
+
+
+
+
+
+
+
+a {
+  color: #b3b3ff; /* Link color */
+  text-decoration: none;
+  text-align: center; /* Center align links */
+  margin-top: 10px; /* Space above links */
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.current-image {
+  margin: 15px 0; /* Space around current image */
+  text-align: center; /* Center align */
+}
+
+.current-image img {
+  max-width: 100%; /* Responsive image */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 4px; /* Rounded corners */
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 2em; /* Smaller heading on mobile */
+  }
+
+  input[type="text"],
+  input[type="date"],
+  input[type="number"],
+  textarea {
+    padding: 8px; /* Smaller padding on mobile */
+  }
+
+ 
+  button {
+    padding: 8px 12px; /* Smaller button padding */
+  }
+
+
+
+}

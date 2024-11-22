@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book Notes</title>
+  <link rel="icon" href="images.jpeg" type="image/jpeg" />
+
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div></div>
+    <div class="container">
+      <header>
+       
+   
+        <h1>Thierry IRADUKUNDA</h1>
+        <h2>Books I've Read</h2>
+      </header>
+      <a href="/add">
+        <button><i class="fas fa-plus"></i> Add</button>
+      </a>
+      <% books.forEach(book => { %>
+      <div class="book-review">
+        <div class="book-cover">
+          <% if (book.image_path) { %>
+          <img src="<%= book.image_path %>" alt="<%= book.title %>" />
+          <% } %>
+        </div>
+        <div class="book-details">
+          <h3><%= book.title %></h3>
+          <p class="date-rating">
+            Date read: <%= book.formatted_read_date %>
+            <span class="rating">
+              How strongly I recommend it: <%= book.book_rating %>/10
+            </span>
+          </p>
+          <p class="review-text"><%= book.takeaways %></p>
+          <p class="links">
+            <a href="/read/<%= book.id %>" class="notes-link">Read more</a>
+          </p>
+          <div>
+            <a href="/edit/<%= book.id %>">
+              <button><i class="fas fa-edit"></i> Edit</button>
+            </a>
+
+            <form
+              action="/delete/<%= book.id %>"
+              method="POST"
+              style="display: inline"
+            >
+              <button
+                class="delete-button"
+                onclick="return confirm('Are you sure you want to delete this book?');"
+              >
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </body>
+</html>

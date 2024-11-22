@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="/autha.css" />
+
+   
+    <script>
+      
+
+      function togglePassword() {
+        const passwordField = document.getElementById("user_password");
+        passwordField.type =
+          passwordField.type === "password" ? "text" : "password";
+      }
+
+    
+    </script>
+  </head>
+  <body>
+    <div id="form-container">
+      <!-- Login Form -->
+      <div id="login-form">
+        <form action="/login" method="POST">
+          <h1 id="form-title">Login as admin </h1>
+          <label for="username">Username:</label>
+          <input type="text" name="username" id="username" required />
+
+          <label for="user_password">Password:</label>
+          <input
+            type="password"
+            name="user_password"
+            id="user_password"
+            required
+          />
+
+          <div class="show-password">
+            <input type="checkbox" onclick="togglePassword()" /> Show Password
+          </div>
+
+          <button type="submit">Login</button>
+        </form>
+        <p>
+          Not admin?
+          <a href="/home" >Visit as user</a>
+        </p>
+      </div>
+
+      
+      
+     
+      
+      </div>
+    </div>
+  </body>
+</html>
