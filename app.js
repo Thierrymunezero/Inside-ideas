@@ -5,58 +5,45 @@ import pg from "pg"; // PostgreSQL client
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import ip from "ip";
-import fs from "fs"
-import path from "path"
+import fs from "fs";
+import path from "path";
 import session from "express-session";
 import bcrypt from "bcryptjs";
 import dotenv from 'dotenv';
+import connectPgSimple from 'connect-pg-simple';
+
+// Load environment variables
 dotenv.config();
 
 // Define __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Database configuration
-// Database configuration
-const db = new pg.Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false, // Required for Render's PostgreSQL
-    },
-});
+// Session store using PostgreSQL
+const PgSession = connectPgSimple(session);
 
-// Connect to the database with error handling
-db.connect(err => {
-    if (err) {
-        console.error('Could not connect to the database', err);
-    } else {
-        console.log('Connected to the database');
-    }
-});
-
-
-
-// Connect to the database with error handling
-db.connect(err => {
-    if (err) {
-        console.error('Could not connect to the database', err);
-    } else {
-        console.log('Connected to the database');
-    }
-});
-
-// Debugging: Log environment variables  
-console.log('DB User:', process.env.DB_USER);  
-console.log('DB Host:', process.env.DB_HOST);  
-console.log('DB Database:', process.env.DB_DATABASE);  
-console.log('DB Password:', process.env.DB_PASSWORD);  
-console.log('DB Port:', process.env.DB_PORT);  
-
-
-
+// Initialize express app
 const app = express();
 app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views')); // Set views directory
+
+// Database connection
+let db;
+if (!db) {
+    db = new pg.Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false,  // Allow self-signed certificates
+        },
+    });
+    db.connect(err => {
+        if (err) {
+            console.error('Could not connect to the database', err);
+        } else {
+            console.log('Connected to the database');
+        }
+    });
+}
 
 // Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -65,31 +52,31 @@ app.use(express.static(join(__dirname, "public"))); // Serve static files
 // Multer setup for file uploads
 const upload = multer({ dest: "public/uploads/" });
 
-// Routes
+// Session configuration using PostgreSQL store
+app.use(session({
+    store: new PgSession({
+        conString: process.env.DATABASE_URL,
+    }),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+}));
 
-app.use(session({  
-    secret: process.env.SESSION_SECRET,  
-    resave: false,  
-    saveUninitialized: true,  
-}));  
-// to check if you are admin 
-
+// Check authentication middleware
 const checkAuth = (req, res, next) => {
     if (!req.session.userId) {
-        return res.redirect('/auth'); // Redirect to auth page if not authenticated
+        return res.redirect('/auth');
     }
     next();
 };
 
-// login for admin
-
+// Login for admin
 app.post("/login", async (req, res) => {
     try {
         const { username, user_password } = req.body;
         const result = await db.query('SELECT * FROM user_admin WHERE user_name = $1', [username]);
         if (result.rows.length > 0) {
             const user = result.rows[0];
-            // Plain-text comparison for now
             if (user_password === user.user_password) {
                 req.session.userId = user.id;
                 return res.redirect('/');
@@ -101,9 +88,6 @@ app.post("/login", async (req, res) => {
         res.status(500).send('Server error');
     }
 });
-
-
-
 
 // View all posts as admin
 app.get("/", checkAuth, async (req, res) => {
@@ -236,7 +220,6 @@ app.post("/delete/:id", checkAuth, async (req, res) => {
 });
 
 // Update an existing book
-
 app.post('/update/:id', checkAuth, upload.single("image"), async (req, res) => {  
     const bookId = parseInt(req.params.id, 10); // Convert to integer  
 
@@ -287,17 +270,13 @@ app.post('/update/:id', checkAuth, upload.single("image"), async (req, res) => {
         });  
     }  
 });
-// to go as user or admin
+
+// Authentication page
 app.get("/auth", (req, res) => {
-    res.render("Auth")
-})
+    res.render("Auth");
+});
 
-
-
-
-
-// user home page
-
+// User home page
 app.get("/home", async (req, res) => {
     try {
         const result = await db.query(`
@@ -324,9 +303,8 @@ app.get("/home", async (req, res) => {
     }
 });
 
+// User read more page
 
-
-// user read more
 
 
 app.get("/read/user/:id", async (req, res) => {
