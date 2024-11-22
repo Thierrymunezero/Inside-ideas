@@ -90,6 +90,39 @@ const ensureBookNotesTable = async () => {
 };
 
 
+
+// Ensure the `user_admin` table exists and seed default admin
+const ensureUserAdminTable = async () => {
+    const createUserAdminTableQuery = `
+        CREATE TABLE IF NOT EXISTS user_admin (
+            id SERIAL PRIMARY KEY,
+            user_name VARCHAR(50) NOT NULL UNIQUE,
+            user_password VARCHAR(50) NOT NULL
+        );
+    `;
+
+    const seedAdminUserQuery = `
+        INSERT INTO user_admin (user_name, user_password)
+        VALUES ('thierry', '02')
+        ON CONFLICT (user_name) DO NOTHING;
+    `;
+
+    try {
+        // Create the `user_admin` table
+        await db.query(createUserAdminTableQuery);
+        console.log("Ensured 'user_admin' table exists.");
+
+        // Seed the default admin user
+        await db.query(seedAdminUserQuery);
+        console.log("Seeded default admin user: thierry.");
+    } catch (err) {
+        console.error("Error ensuring `user_admin` table or seeding admin user:", err);
+    }
+};
+
+// Call the function to ensure the table
+
+
 // Call the functions to ensure tables
 ensureBookNotesTable();
 ensureUserAdminTable();
