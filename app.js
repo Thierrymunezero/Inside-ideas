@@ -17,13 +17,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Database configuration
+// Database configuration
 const db = new pg.Client({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_DATABASE,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false, // Required for Render's PostgreSQL
+    },
 });
+
+// Connect to the database with error handling
+db.connect(err => {
+    if (err) {
+        console.error('Could not connect to the database', err);
+    } else {
+        console.log('Connected to the database');
+    }
+});
+
 
 
 // Connect to the database with error handling
@@ -350,9 +360,8 @@ app.get("/read/user/:id", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3009;
-app.listen(PORT, ip.address(), () => {
-    console.log(`Server is running on http://${ip.address()}:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
-
 
 
