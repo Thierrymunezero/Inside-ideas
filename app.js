@@ -263,6 +263,69 @@ app.post("/delete/:id", checkAuth, async (req, res) => {
     }
 });
 
+
+
+
+// User home page
+app.get("/home", async (req, res) => {
+    try {
+        const result = await pgPool.query(`
+            SELECT 
+                id,
+                image_path,
+                TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,
+                title,
+                book_rating,
+                takeaways,
+                content,
+                created_at,
+                updated_at
+            FROM 
+                book_notes 
+            ORDER BY 
+                id DESC
+        `);
+        res.render("userhome", { books: result.rows });
+    } catch (err) {
+        console.error("Error retrieving data", err);
+        res.status(500).send("Server error");
+    }
+});
+
+// User read more page
+
+
+app.get("/read/user/:id", async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT   
+                id,  
+                image_path,  
+                TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,  
+                title,  
+                book_rating,  
+                takeaways,  
+                content,  
+                created_at,  
+                updated_at  
+            FROM   
+                book_notes   
+            WHERE   
+                id = $1
+        `, [req.params.id]);
+
+        if (result.rows.length > 0) {
+            res.render("usershow", { book: result.rows[0] });
+        } else {
+            res.status(404).send("Book not found");
+        }
+    } catch (err) {
+        console.error("Error retrieving book", err);
+        res.status(500).send("Server error");
+    }
+});
+
+
 // Start the server
 const PORT = process.env.PORT || 3009;
 app.listen(PORT, () => {
