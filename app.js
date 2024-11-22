@@ -9,7 +9,6 @@ import connectPgSimple from "connect-pg-simple"; // Import PgSession
 import session from "express-session";
 import { Pool } from 'pg';
 
-
 // Load environment variables
 dotenv.config();
 
@@ -25,39 +24,15 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views')); // Set views directory
 
-// Database connection
-let db;
-if (!db) {
-    db = new pg.Client({
-        connectionString: process.env.DATABASE_URL,
-        ssl: {
-            rejectUnauthorized: false, // Allow self-signed certificates
-        },
-    });
-
-    db.connect(err => {
-        if (err) {
-            console.error('Could not connect to the database', err);
-        } else {
-            console.log('Connected to the database');
-        }
-    });
-}
-
-
-
-
-
-const pgSession = connectPgSimple(session); // Initialize with session
-
+// Database connection pool
 const pgPool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
 });
 
-
+// Session configuration using PostgreSQL store
 app.use(session({
-    store: new pgSession({
+    store: new PgSession({
         pool: pgPool,
         tableName: 'session', // Optional: specify your session table name
     }),
@@ -67,30 +42,12 @@ app.use(session({
     cookie: { secure: false }, // Set to true if using HTTPS
 }));
 
-
-
 // Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(join(__dirname, "public"))); // Serve static files
 
-
-//app.use(
-   // session({
-        //store: new connectPgSimple({
-          //  pool: db, // PostgreSQL client pool
-        //}),
-        //secret: process.env.SESSION_SECRET,
-        //resave: false,
-      //  saveUninitialized: false,
-    //})
-//);
-
-
-
 // Multer setup for file uploads
 const upload = multer({ dest: "public/uploads/" });
-
-// Session configuration using PostgreSQL store
 
 // Check authentication middleware
 const checkAuth = (req, res, next) => {
@@ -104,7 +61,7 @@ const checkAuth = (req, res, next) => {
 app.post("/login", async (req, res) => {
     try {
         const { username, user_password } = req.body;
-        const result = await db.query('SELECT * FROM user_admin WHERE user_name = $1', [username]);
+        const result = await pgPool.query('SELECT * FROM user_admin WHERE user_name = $1', [username]);
         if (result.rows.length > 0) {
             const user = result.rows[0];
             if (user_password === user.user_password) {
@@ -122,7 +79,7 @@ app.post("/login", async (req, res) => {
 // View all posts as admin
 app.get("/", checkAuth, async (req, res) => {
     try {
-        const result = await db.query(`
+        const result = await pgPool.query(`
             SELECT 
                 id,
                 image_path,
@@ -138,7 +95,6 @@ app.get("/", checkAuth, async (req, res) => {
             ORDER BY 
                 id DESC
         `);
-
         res.render("home", { books: result.rows });
     } catch (err) {
         console.error("Error retrieving data", err);
@@ -154,7 +110,7 @@ app.get("/add", checkAuth, (req, res) => {
 // Get a specific book by ID
 app.get("/read/:id", checkAuth, async (req, res) => {
     try {
-        const result = await db.query(`
+        const result = await pgPool.query(`
             SELECT   
                 id,  
                 image_path,  
@@ -182,44 +138,13 @@ app.get("/read/:id", checkAuth, async (req, res) => {
     }
 });
 
-// Edit a book
-app.get("/edit/:id", checkAuth, async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT   
-                id,  
-                image_path,  
-                TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,  
-                title,  
-                book_rating,  
-                takeaways,  
-                content,  
-                created_at,  
-                updated_at  
-            FROM   
-                book_notes   
-            WHERE   
-                id = $1
-        `, [req.params.id]);
-
-        if (result.rows.length > 0) {
-            res.render("edit", { book: result.rows[0] });
-        } else {
-            res.status(404).send("Book not found");
-        }
-    } catch (err) {
-        console.error("Error retrieving book", err);
-        res.status(500).send("Server error");
-    }
-});
-
 // Add a new book
 app.post("/add", checkAuth, upload.single("image"), async (req, res) => {
     try {
         const { title, read_date, book_rating, takeaways, content } = req.body;
         const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
 
-        await db.query(`
+        await pgPool.query(`
             INSERT INTO book_notes 
                 (title, read_date, book_rating, takeaways, content, image_path) 
             VALUES 
@@ -236,7 +161,7 @@ app.post("/add", checkAuth, upload.single("image"), async (req, res) => {
 // Delete a book
 app.post("/delete/:id", checkAuth, async (req, res) => {
     try {
-        const result = await db.query("DELETE FROM book_notes WHERE id = $1", [req.params.id]);
+        const result = await pgPool.query("DELETE FROM book_notes WHERE id = $1", [req.params.id]);
 
         if (result.rowCount > 0) {
             res.redirect("/");
@@ -250,55 +175,43 @@ app.post("/delete/:id", checkAuth, async (req, res) => {
 });
 
 // Update an existing book
-app.post('/update/:id', checkAuth, upload.single("image"), async (req, res) => {  
-    const bookId = parseInt(req.params.id, 10); // Convert to integer  
+app.post('/update/:id', checkAuth, upload.single("image"), async (req, res) => {
+    const bookId = parseInt(req.params.id, 10); // Convert to integer
 
-    if (isNaN(bookId)) {  
-        return res.status(400).send("Invalid book ID");  
-    }  
+    if (isNaN(bookId)) {
+        return res.status(400).send("Invalid book ID");
+    }
 
-    // Destructure the request body  
-    const { title, read_date, rating: book_rating, takeaways, content, existingImagePath } = req.body;  
+    // Destructure the request body
+    const { title, read_date, rating: book_rating, takeaways, content, existingImagePath } = req.body;
 
-    // Initialize imagePath with existing image  
-    let imagePath = existingImagePath || "";  
+    // Initialize imagePath with existing image
+    let imagePath = existingImagePath || "";
 
-    // Check if a new file was uploaded  
-    if (req.file) {  
-        imagePath = `/uploads/${req.file.filename}`; // Update to new image path if uploaded  
-    }  
+    // Check if a new file was uploaded
+    if (req.file) {
+        imagePath = `/uploads/${req.file.filename}`; // Update to new image path if uploaded
+    }
 
-    try {  
-        // Update the database  
-        await db.query(`  
+    try {
+        // Update the database
+        await pgPool.query(`
             UPDATE book_notes  
-            SET title = \$1, read_date = \$2, book_rating = \$3, takeaways = \$4, content = \$5, image_path = \$6  
-            WHERE id = \$7  
-        `, [title, read_date, book_rating, takeaways, content, imagePath, bookId]);  
+            SET title = $1, read_date = $2, book_rating = $3, takeaways = $4, content = $5, image_path = $6  
+            WHERE id = $7  
+        `, [title, read_date, book_rating, takeaways, content, imagePath, bookId]);
 
-        // Redirect to home page after successful update  
-        res.redirect("/");  
+        // Redirect to home page after successful update
+        res.redirect("/");
+    } catch (error) {
+        console.error("Error updating the book:", error.message);
 
-    } catch (error) {  
-        console.error("Error updating the book:", error.message);  
-
-        // Prepare the data to re-render the edit page with current values and error message  
-        const book = {  
-            id: bookId,  
-            title: title || "",  
-            read_date: read_date || null,  
-            book_rating: book_rating || "",  
-            takeaways: takeaways || "",  
-            content: content || "",  
-            image_path: existingImagePath || "", // Use existing image path in case of error  
-        };  
-
-        // Render the edit page with the error message  
-        res.render("edit", {  
-            book,  
-            error: "An error occurred while updating the book. Please try again.",  
-        });  
-    }  
+        // Render the edit page with error message
+        res.render("edit", {
+            book: { id: bookId, title, read_date, book_rating, takeaways, content, image_path: existingImagePath },
+            error: "An error occurred while updating the book. Please try again.",
+        });
+    }
 });
 
 // Authentication page
@@ -309,7 +222,7 @@ app.get("/auth", (req, res) => {
 // User home page
 app.get("/home", async (req, res) => {
     try {
-        const result = await db.query(`
+        const result = await pgPool.query(`
             SELECT 
                 id,
                 image_path,
@@ -325,7 +238,6 @@ app.get("/home", async (req, res) => {
             ORDER BY 
                 id DESC
         `);
-
         res.render("userhome", { books: result.rows });
     } catch (err) {
         console.error("Error retrieving data", err);
@@ -334,7 +246,6 @@ app.get("/home", async (req, res) => {
 });
 
 // User read more page
-
 
 
 app.get("/read/user/:id", async (req, res) => {
