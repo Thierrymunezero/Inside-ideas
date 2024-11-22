@@ -7,6 +7,7 @@ import { dirname, join } from "path";
 import dotenv from "dotenv";
 import connectPgSimple from "connect-pg-simple"; // Import PgSession
 import session from "express-session";
+import { Client } from 'pg';
 
 // Destructure Pool from the pg module
 const { Pool } = pkg;
