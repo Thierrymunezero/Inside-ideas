@@ -7,6 +7,9 @@ import { dirname, join } from "path";
 import dotenv from "dotenv";
 import connectPgSimple from "connect-pg-simple"; // Import PgSession
 import session from "express-session";
+import { Pool } from 'pg';
+
+
 // Load environment variables
 dotenv.config();
 
@@ -43,21 +46,44 @@ if (!db) {
 
 
 
+
+
+const pgSession = connectPgSimple(session); // Initialize with session
+
+const pgPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+});
+
+
+app.use(session({
+    store: new pgSession({
+        pool: pgPool,
+        tableName: 'session', // Optional: specify your session table name
+    }),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }, // Set to true if using HTTPS
+}));
+
+
+
 // Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(join(__dirname, "public"))); // Serve static files
 
 
-app.use(
-    session({
-        store: new connectPgSimple({
-            pool: db, // PostgreSQL client pool
-        }),
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-    })
-);
+//app.use(
+   // session({
+        //store: new connectPgSimple({
+          //  pool: db, // PostgreSQL client pool
+        //}),
+        //secret: process.env.SESSION_SECRET,
+        //resave: false,
+      //  saveUninitialized: false,
+    //})
+//);
 
 
 
