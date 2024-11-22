@@ -1,14 +1,11 @@
 import express from "express";
 import bodyParser from "body-parser";
 import multer from "multer";
-import pg from "pg"; // PostgreSQL client
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import ip from "ip";
-import fs from "fs";
-import path from "path";
-import bcrypt from "bcryptjs";
-import dotenv from 'dotenv';
+import pg from "pg";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import dotenv from "dotenv";
+import connectPgSimple from "connect-pg-simple"; // Import PgSession
 import session from "express-session";
 // Load environment variables
 dotenv.config();
@@ -28,29 +25,39 @@ app.set('views', join(__dirname, 'views')); // Set views directory
 // Database connection
 let db;
 if (!db) {
+    db = new pg.Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false, // Allow self-signed certificates
+        },
+    });
 
+    db.connect(err => {
+        if (err) {
+            console.error('Could not connect to the database', err);
+        } else {
+            console.log('Connected to the database');
+        }
+    });
+}
 
-const pg = require('pg'); // Ensure you're importing 'pg'
-
-const db = new pg.Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false, // Allow self-signed certificates (useful for production hosts like Render)
-    },
-});
-
-db.connect(err => {
-    if (err) {
-        console.error('Could not connect to the database', err);
-    } else {
-        console.log('Connected to the database');
-    }
-});
 
 
 // Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(join(__dirname, "public"))); // Serve static files
+
+
+app.use(
+    session({
+        store: new PgSession({
+            pool: db, // Use the same PostgreSQL connection pool
+        }),
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+    })
+);
 
 // Multer setup for file uploads
 const upload = multer({ dest: "public/uploads/" });
@@ -331,6 +338,7 @@ app.get("/read/user/:id", async (req, res) => {
         res.status(500).send("Server error");
     }
 });
+
 
 const PORT = process.env.PORT || 3009;
 app.listen(PORT, () => {
