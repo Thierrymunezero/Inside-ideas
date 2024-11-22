@@ -7,10 +7,9 @@ import { dirname, join } from "path";
 import dotenv from "dotenv";
 import connectPgSimple from "connect-pg-simple"; // Import PgSession
 import session from "express-session";
-import { Client } from 'pg';
 
-// Destructure Pool from the pg module
-const { Pool } = pkg;
+// Destructure Client and Pool from the pg module
+const { Client, Pool } = pkg;
 
 // Load environment variables
 dotenv.config();
@@ -27,38 +26,30 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views')); // Set views directory
 
-
-
+// Initialize PostgreSQL client
 const db = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
 });
 
+// Connect to the database
+db.connect(err => {
+    if (err) {
+        console.error('Could not connect to the database', err);
+    } else {
+        console.log('Connected to the database');
+    }
+});
 
-if (!db) {
-    db = new pg.Client({
-        connectionString: process.env.DATABASE_URL,
-        ssl: {
-            rejectUnauthorized: false, // Allow self-signed certificates
-        },
-    });
-
-    db.connect(err => {
-        if (err) {
-            console.error('Could not connect to the database', err);
-        } else {
-            console.log('Connected to the database');
-        }
-    });
-}
-
+// Initialize PostgreSQL pool
 const pgPool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
 });
 
+// Use session middleware
 app.use(session({
-    store: new pgSession({
+    store: new PgSession({
         pool: pgPool,
         tableName: 'session', // Optional: specify your session table name
     }),
@@ -67,6 +58,7 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false }, // Set to true if using HTTPS
 }));
+
 
 // Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
