@@ -30,12 +30,13 @@ app.set('views', join(__dirname, 'views')); // Set views directory
 // Database connection
 let db;
 if (!db) {
-    db = new pg.Client({
-        connectionString: process.env.DATABASE_URL,
-        ssl: {
-            rejectUnauthorized: false,  // Allow self-signed certificates
-        },
-    });
+
+
+const db = new pg.Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: false, // No SSL for internal communication
+});
+
     db.connect(err => {
         if (err) {
             console.error('Could not connect to the database', err);
