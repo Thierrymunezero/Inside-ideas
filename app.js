@@ -33,72 +33,73 @@ const pgPool = new Pool({
 });
 
 // Ensure tables exist
-const ensureTables = async () => {
-    const createBookNotesTable = `
-        CREATE TABLE IF NOT EXISTS book_notes (
-            id SERIAL PRIMARY KEY,
-            image_data BYTEA,
-            read_date DATE,
-            title VARCHAR(255) NOT NULL,
-            book_rating INTEGER,
-            takeaways TEXT,
-            content TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    `;
+const ensureTables = async () => {  
+    const createBookNotesTable = `  
+        CREATE TABLE IF NOT EXISTS book_notes (  
+            id SERIAL PRIMARY KEY,  
+            image_data BYTEA,  
+            read_date DATE,  
+            title VARCHAR(255) NOT NULL,  
+            book_rating INTEGER,  
+            takeaways TEXT,  
+            content TEXT,  
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  
+        );  
+    `;  
 
-    const createUserAdminTable = `
-        CREATE TABLE IF NOT EXISTS user_admin (
-            id SERIAL PRIMARY KEY,
-            user_name VARCHAR(50) NOT NULL UNIQUE,
-            user_password VARCHAR(50) NOT NULL
-        );
-    `;
+    const createUserAdminTable = `  
+        CREATE TABLE IF NOT EXISTS user_admin (  
+            id SERIAL PRIMARY KEY,  
+            user_name VARCHAR(50) NOT NULL UNIQUE,  
+            user_password VARCHAR(50) NOT NULL  
+        );  
+    `;  
 
-    const seedAdminUser = `
-        INSERT INTO user_admin (user_name, user_password)
-        VALUES ('thierry', '02')
-        ON CONFLICT (user_name) DO NOTHING;
-    `;
+    const seedAdminUser = `  
+        INSERT INTO user_admin (user_name, user_password)  
+        VALUES ('thierry', '02')  
+        ON CONFLICT (user_name) DO NOTHING;  
+    `;  
 
-    const createTrigger = `
-        DO $$
-        BEGIN
-            IF EXISTS (
-                SELECT 1 FROM pg_trigger WHERE tgname = 'set_updated_at'
-            ) THEN
-                DROP TRIGGER set_updated_at ON book_notes;
-            END IF;
+    // Trigger and function definition  
+    const createTriggerFunction = `  
+        CREATE OR REPLACE FUNCTION update_updated_at_column()  
+        RETURNS TRIGGER AS $$  
+        BEGIN  
+            NEW.updated_at = CURRENT_TIMESTAMP;  
+            RETURN NEW;  
+        END;  
+        $$ LANGUAGE plpgsql;  
+    `;  
 
-            CREATE OR REPLACE FUNCTION update_updated_at_column()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                NEW.updated_at = CURRENT_TIMESTAMP;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
+    const createTrigger = `  
+        CREATE TRIGGER set_updated_at  
+        BEFORE UPDATE ON book_notes  
+        FOR EACH ROW  
+        EXECUTE FUNCTION update_updated_at_column();  
+    `;  
 
-            CREATE TRIGGER set_updated_at
-            BEFORE UPDATE ON book_notes
-            FOR EACH ROW
-            EXECUTE FUNCTION update_updated_at_column();
-        END;
-        $$;
-    `;
-
-    try {
-        await db.query(createBookNotesTable);
-        await db.query(createUserAdminTable);
-        await db.query(seedAdminUser);
-        await db.query(createTrigger);
-        console.log("Tables ensured and admin seeded.");
-    } catch (err) {
-        console.error("Error ensuring tables:", err);
-    }
+    try {  
+        // Create tables  
+        await db.query(createBookNotesTable);  
+        await db.query(createUserAdminTable);  
+        
+        // Insert the admin user  
+        await db.query(seedAdminUser);  
+        
+        // Create the function and trigger  
+        await db.query(createTriggerFunction);  
+        await db.query(createTrigger);  
+        
+        console.log("Tables ensured and admin seeded.");  
+    } catch (err) {  
+        console.error("Error ensuring tables:", err);  
+    }  
 };
 
-ensureTables();
+
+
 
 // Express app setup
 const app = express();
