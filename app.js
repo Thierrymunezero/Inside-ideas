@@ -330,9 +330,7 @@ app.get("/home", async (req, res) => {
 
 app.get("/read/user/:id", async (req, res) => {
     try {
-
-
-                const result = await db.query(`  
+        const result = await db.query(`
             SELECT   
                 id,   
                 TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,  
@@ -347,9 +345,10 @@ app.get("/read/user/:id", async (req, res) => {
                     ELSE NULL   
                 END AS image_data_base64  
             FROM book_notes  
-            ORDER BY id DESC  
-        `, [req.params.id]);  
-       
+            WHERE id = $1   -- Add a placeholder for id
+            ORDER BY id DESC
+        `, [req.params.id]);  // Pass the id as a parameter
+
         if (result.rows.length > 0) {
             res.render("usershow", { book: result.rows[0] });
         } else {
@@ -360,6 +359,7 @@ app.get("/read/user/:id", async (req, res) => {
         res.status(500).send("Server error");
     }
 });
+
 
 
 // Server start
