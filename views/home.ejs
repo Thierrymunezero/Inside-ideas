@@ -27,7 +27,7 @@
       <% books.forEach(book => { %>
       <div class="book-review">
         <div class="book-cover">
-          <% if (book.image_path) { %>
+          <% if (book.image_data) { %>
           <img src="<%= book.image_path %>" alt="<%= book.title %>" />
           <% } %>
         </div>
