@@ -21,13 +21,10 @@
         <p id="book-rating">Rating: <%= book.book_rating %>/10</p>
       </header>
       <div id="book-cover-section">
-        <% if (book.image_data) { %>
-        <img
-          id="book-cover-image"
-          src="<%= book.image_data %>"
-          alt="<%= book.title %>"
-        />
-        <% } %>
+<% if (book.image_data_base64) { %>  
+            <img src="data:image/jpeg;base64,<%= book.image_data_base64 %>" alt="<%= book.title %>" />  
+        <% } %>  
+       
       </div>
       <div id="book-info-section">
         <h3 id="takeaways-header"></h3>
