@@ -55,11 +55,13 @@
           <input type="file" id="image" name="image" />
         </div>
 
-        <% if (book.image_data) { %>
+
+
+        <% if (book.image_data_base64) { %>
         <div class="form-group">
           <strong>Current Image:</strong>
           <img
-            src="<%= book.image_data %>"
+            src="<%= data:image/jpeg;base64,<%= book.image_data_base64 %>" alt="<%= book.title %>"
             alt="Current Cover Image"
             style="max-width: 200px; height: auto;"
           />
