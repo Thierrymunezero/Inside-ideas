@@ -302,7 +302,7 @@ app.get("/edit/:id", checkAuth, async (req, res) => {
 });
 
 // User home page
-app.get("/home", checkAuth, async (req, res) => {  
+app.get("/home", async (req, res) => {  
     try {  
         const result = await db.query(`  
             SELECT   
