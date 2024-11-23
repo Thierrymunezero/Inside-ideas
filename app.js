@@ -32,7 +32,6 @@ const pgPool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
-// Ensure tables exist
 const ensureTables = async () => {  
     const createBookNotesTable = `  
         CREATE TABLE IF NOT EXISTS book_notes (  
@@ -62,7 +61,7 @@ const ensureTables = async () => {
         ON CONFLICT (user_name) DO NOTHING;  
     `;  
 
-    // Trigger and function definition  
+    // Trigger function definition  
     const createTriggerFunction = `  
         CREATE OR REPLACE FUNCTION update_updated_at_column()  
         RETURNS TRIGGER AS $$  
@@ -73,6 +72,12 @@ const ensureTables = async () => {
         $$ LANGUAGE plpgsql;  
     `;  
 
+    // SQL command to drop the trigger if it exists  
+    const dropTrigger = `  
+        DROP TRIGGER IF EXISTS set_updated_at ON book_notes;  
+    `;  
+
+    // SQL command to create the trigger  
     const createTrigger = `  
         CREATE TRIGGER set_updated_at  
         BEFORE UPDATE ON book_notes  
@@ -88,19 +93,22 @@ const ensureTables = async () => {
         // Insert the admin user  
         await db.query(seedAdminUser);  
         
-        // Create the function and trigger  
+        // Create or replace the trigger function  
         await db.query(createTriggerFunction);  
+        
+        // Drop the trigger if it exists  
+        await db.query(dropTrigger);  
+        
+        // Create the trigger  
         await db.query(createTrigger);  
         
         console.log("Tables ensured and admin seeded.");  
     } catch (err) {  
         console.error("Error ensuring tables:", err);  
     }  
-};
-
+};  
 
 ensureTables();
-
 // Express app setup
 const app = express();
 app.set("view engine", "ejs");
