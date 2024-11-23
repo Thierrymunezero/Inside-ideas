@@ -99,7 +99,7 @@ const ensureTables = async () => {
 };
 
 
-
+ensureTables();
 
 // Express app setup
 const app = express();
