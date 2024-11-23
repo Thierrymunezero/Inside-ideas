@@ -32,101 +32,84 @@ const pgPool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
-const ensureTables = async () => {  
-    // Delete the book_notes table if it exists  
-    const dropBookNotesTable = `  
-        DROP TABLE IF EXISTS book_notes;  
-    `;  
-    
-    // Create the book_notes table  
-    const createBookNotesTable = `  
-        CREATE TABLE book_notes (  
-            id SERIAL PRIMARY KEY,  
-            image_data BYTEA,  
-            read_date DATE,  
-            title VARCHAR(255) NOT NULL,  
-            book_rating INTEGER,  
-            takeaways TEXT,  
-            content TEXT,  
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  
-        );  
-    `;  
+const ensureTables = async () => {
+    // Create the book_notes table if it doesn't exist
+    const createBookNotesTable = `
+        CREATE TABLE IF NOT EXISTS book_notes (
+            id SERIAL PRIMARY KEY,
+            image_data BYTEA,
+            read_date DATE,
+            title VARCHAR(255) NOT NULL,
+            book_rating INTEGER,
+            takeaways TEXT,
+            content TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
 
-    // Delete the user_admin table if it exists  
-    const dropUserAdminTable = `  
-        DROP TABLE IF EXISTS user_admin;  
-    `;  
-    
-    // Create the user_admin table  
-    const createUserAdminTable = `  
-        CREATE TABLE user_admin (  
-            id SERIAL PRIMARY KEY,  
-            user_name VARCHAR(50) NOT NULL UNIQUE,  
-            user_password VARCHAR(50) NOT NULL  
-        );  
-    `;  
+    // Create the user_admin table if it doesn't exist
+    const createUserAdminTable = `
+        CREATE TABLE IF NOT EXISTS user_admin (
+            id SERIAL PRIMARY KEY,
+            user_name VARCHAR(50) NOT NULL UNIQUE,
+            user_password VARCHAR(50) NOT NULL
+        );
+    `;
 
-    // Insert the admin user  
-    const seedAdminUser = `  
-        INSERT INTO user_admin (user_name, user_password)  
-        VALUES ('thierry', '02')  
-        ON CONFLICT (user_name) DO NOTHING;  
-    `;  
+    // Insert the admin user if it doesn't already exist
+    const seedAdminUser = `
+        INSERT INTO user_admin (user_name, user_password)
+        VALUES ('thierry', '02')
+        ON CONFLICT (user_name) DO NOTHING;
+    `;
 
-    // Trigger function definition  
-    const createTriggerFunction = `  
-        CREATE OR REPLACE FUNCTION update_updated_at_column()  
-        RETURNS TRIGGER AS $$  
-        BEGIN  
-            NEW.updated_at = CURRENT_TIMESTAMP;  
-            RETURN NEW;  
-        END;  
-        $$ LANGUAGE plpgsql;  
-    `;  
+    // Trigger function definition
+    const createTriggerFunction = `
+        CREATE OR REPLACE FUNCTION update_updated_at_column()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            NEW.updated_at = CURRENT_TIMESTAMP;
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+    `;
 
-    // Drop the existing trigger if it exists  
-    const dropTrigger = `  
-        DROP TRIGGER IF EXISTS set_updated_at ON book_notes;  
-    `;  
+    // Create the trigger if it doesn't exist
+    const createTrigger = `
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_trigger WHERE tgname = 'set_updated_at'
+            ) THEN
+                CREATE TRIGGER set_updated_at
+                BEFORE UPDATE ON book_notes
+                FOR EACH ROW
+                EXECUTE FUNCTION update_updated_at_column();
+            END IF;
+        END $$;
+    `;
 
-    // Create the trigger  
-    const createTrigger = `  
-        CREATE TRIGGER set_updated_at  
-        BEFORE UPDATE ON book_notes  
-        FOR EACH ROW  
-        EXECUTE FUNCTION update_updated_at_column();  
-    `;  
+    try {
+        // Create tables
+        await db.query(createBookNotesTable);
+        await db.query(createUserAdminTable);
 
-    try {  
-        // Drop tables if they exist  
-        await db.query(dropBookNotesTable);  
-        await db.query(dropUserAdminTable);  
-        
-        // Create tables  
-        await db.query(createBookNotesTable);  
-        await db.query(createUserAdminTable);  
-        
-        // Insert the admin user  
-        await db.query(seedAdminUser);  
-        
-        // Create or replace the trigger function  
-        await db.query(createTriggerFunction);  
-        
-        // Drop the trigger if it exists  
-        await db.query(dropTrigger);  
-        
-        // Create the trigger  
-        await db.query(createTrigger);  
-        
-        console.log("Tables have been dropped and recreated, and admin user seeded.");  
-    } catch (err) {  
-        console.error("Error ensuring tables:", err);  
-    }  
-};  
+        // Seed admin user
+        await db.query(seedAdminUser);
+
+        // Create trigger function and trigger
+        await db.query(createTriggerFunction);
+        await db.query(createTrigger);
+
+        console.log("Tables and triggers ensured.");
+    } catch (err) {
+        console.error("Error ensuring tables:", err);
+    }
+};
 
 ensureTables();
-// Express app setup
+
 const app = express();
 app.set("view engine", "ejs");
 app.set("views", join(__dirname, "views"));
