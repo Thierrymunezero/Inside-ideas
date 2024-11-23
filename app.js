@@ -33,8 +33,14 @@ const pgPool = new Pool({
 });
 
 const ensureTables = async () => {  
+    // Delete the book_notes table if it exists  
+    const dropBookNotesTable = `  
+        DROP TABLE IF EXISTS book_notes;  
+    `;  
+    
+    // Create the book_notes table  
     const createBookNotesTable = `  
-        CREATE TABLE IF NOT EXISTS book_notes (  
+        CREATE TABLE book_notes (  
             id SERIAL PRIMARY KEY,  
             image_data BYTEA,  
             read_date DATE,  
@@ -47,14 +53,21 @@ const ensureTables = async () => {
         );  
     `;  
 
+    // Delete the user_admin table if it exists  
+    const dropUserAdminTable = `  
+        DROP TABLE IF EXISTS user_admin;  
+    `;  
+    
+    // Create the user_admin table  
     const createUserAdminTable = `  
-        CREATE TABLE IF NOT EXISTS user_admin (  
+        CREATE TABLE user_admin (  
             id SERIAL PRIMARY KEY,  
             user_name VARCHAR(50) NOT NULL UNIQUE,  
             user_password VARCHAR(50) NOT NULL  
         );  
     `;  
 
+    // Insert the admin user  
     const seedAdminUser = `  
         INSERT INTO user_admin (user_name, user_password)  
         VALUES ('thierry', '02')  
@@ -72,12 +85,12 @@ const ensureTables = async () => {
         $$ LANGUAGE plpgsql;  
     `;  
 
-    // SQL command to drop the trigger if it exists  
+    // Drop the existing trigger if it exists  
     const dropTrigger = `  
         DROP TRIGGER IF EXISTS set_updated_at ON book_notes;  
     `;  
 
-    // SQL command to create the trigger  
+    // Create the trigger  
     const createTrigger = `  
         CREATE TRIGGER set_updated_at  
         BEFORE UPDATE ON book_notes  
@@ -86,6 +99,10 @@ const ensureTables = async () => {
     `;  
 
     try {  
+        // Drop tables if they exist  
+        await db.query(dropBookNotesTable);  
+        await db.query(dropUserAdminTable);  
+        
         // Create tables  
         await db.query(createBookNotesTable);  
         await db.query(createUserAdminTable);  
@@ -102,7 +119,7 @@ const ensureTables = async () => {
         // Create the trigger  
         await db.query(createTrigger);  
         
-        console.log("Tables ensured and admin seeded.");  
+        console.log("Tables have been dropped and recreated, and admin user seeded.");  
     } catch (err) {  
         console.error("Error ensuring tables:", err);  
     }  
