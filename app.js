@@ -188,20 +188,30 @@ app.post("/login", async (req, res) => {
 });
 
 // Home page with list of notes
-app.get("/", checkAuth, async (req, res) => {
-    try {
-        const result = await db.query(`
-            SELECT 
-                id, TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,
-                title, book_rating, takeaways, content, created_at, updated_at
-            FROM book_notes
-            ORDER BY id DESC
-        `);
-        res.render("home", { books: result.rows });
-    } catch (err) {
-        console.error("Error fetching notes:", err);
-        res.status(500).send("Server error");
-    }
+app.get("/", checkAuth, async (req, res) => {  
+    try {  
+        const result = await db.query(`  
+            SELECT   
+                id,   
+                TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,  
+                title,   
+                book_rating,   
+                takeaways,   
+                content,   
+                created_at,   
+                updated_at,  
+                CASE   
+                    WHEN image_data IS NOT NULL THEN encode(image_data, 'base64')   
+                    ELSE NULL   
+                END AS image_data_base64  
+            FROM book_notes  
+            ORDER BY id DESC  
+        `);  
+        res.render("home", { books: result.rows });  
+    } catch (err) {  
+        console.error("Error fetching notes:", err);  
+        res.status(500).send("Server error");  
+    }  
 });
 
 // Add new book note
@@ -292,48 +302,54 @@ app.get("/edit/:id", checkAuth, async (req, res) => {
 });
 
 // User home page
-app.get("/home", async (req, res) => {
-    try {
-        const result = await pgPool.query(`
-            SELECT 
-                id,
-                TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,
-                title,
-                book_rating,
-                takeaways,
-                content,
-                created_at,
-                updated_at
-            FROM 
-                book_notes 
-            ORDER BY 
-                id DESC
-        `);
-        res.render("userhome", { books: result.rows });
-    } catch (err) {
-        console.error("Error retrieving data", err);
-        res.status(500).send("Server error");
-    }
+app.get("/home", checkAuth, async (req, res) => {  
+    try {  
+        const result = await db.query(`  
+            SELECT   
+                id,   
+                TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,  
+                title,   
+                book_rating,   
+                takeaways,   
+                content,   
+                created_at,   
+                updated_at,  
+                CASE   
+                    WHEN image_data IS NOT NULL THEN encode(image_data, 'base64')   
+                    ELSE NULL   
+                END AS image_data_base64  
+            FROM book_notes  
+            ORDER BY id DESC  
+        `);  
+        res.render("userhome", { books: result.rows });  
+    } catch (err) {  
+        console.error("Error fetching notes:", err);  
+        res.status(500).send("Server error");  
+    }  
 });
+
 app.get("/read/user/:id", async (req, res) => {
     try {
-        const result = await db.query(`
-            SELECT   
-                id,  
-                image_path,  
-                TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,  
-                title,  
-                book_rating,  
-                takeaways,  
-                content,  
-                created_at,  
-                updated_at  
-            FROM   
-                book_notes   
-            WHERE   
-                id = $1
-        `, [req.params.id]);
 
+
+                const result = await db.query(`  
+            SELECT   
+                id,   
+                TO_CHAR(read_date, 'Dy Mon DD YYYY') AS formatted_read_date,  
+                title,   
+                book_rating,   
+                takeaways,   
+                content,   
+                created_at,   
+                updated_at,  
+                CASE   
+                    WHEN image_data IS NOT NULL THEN encode(image_data, 'base64')   
+                    ELSE NULL   
+                END AS image_data_base64  
+            FROM book_notes  
+            ORDER BY id DESC  
+        `, [req.params.id]);  
+       
         if (result.rows.length > 0) {
             res.render("usershow", { book: result.rows[0] });
         } else {
