@@ -1,41 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="images.jpeg" type="image/jpeg" />
-    <title><%= book.title %> - Book Details</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="images.jpeg" type="image/jpeg" />
+  <title><%= book.title %> - Book Details</title>
 
-    <link rel="stylesheet" href="/show.css" />
-
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
-  </head>
-  <body>
-    <div id="book-detail-container">
-      <header id="book-detail-header">
-        <h1 id="book-title"><%= book.title %></h1>
-        <p id="book-read-date">Read on: <%= book.formatted_read_date %></p>
-        <p id="book-rating">Rating: <%= book.book_rating %>/10</p>
-      </header>
-      <div id="book-cover-section">
-<% if (book.image_data_base64) { %>  
-            <img src="data:image/jpeg;base64,<%= book.image_data_base64 %>" alt="<%= book.title %>" />  
-        <% } %>  
-       
-      </div>
-      <div id="book-info-section">
-        <h3 id="takeaways-header"></h3>
-        <p id="takeaways-content"><%= book.takeaways %></p>
-        <h3 id="content-header"></h3>
-        <p id="content-full"><%= book.content %></p>
-        <!-- Display full content -->
-      </div>
-      <a href="/" id="back-to-home-button">
-        <button>Back to Home</button>
-      </a>
+  <link rel="stylesheet" href="/show.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+  />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 id="book-title"><%= book.title %></h1>
+      <p id="book-read-date">Read on: <%= book.formatted_read_date %></p>
+      <p id="book-rating">Rating: <%= book.book_rating %>/10</p>
+    </header>
+    <div id="book-cover-section">
+      <% if (imageBase64) { %>
+        <img src="<%= imageBase64 %>" alt="<%= book.title %>" />
+      <% } %>
     </div>
-  </body>
+    <div id="book-info-section">
+      <h3 id="takeaways-header">Takeaways</h3>
+      <p id="takeaways-content"><%= book.takeaways %></p>
+      <h3 id="content-header">Content</h3>
+      <p id="content-full"><%= book.content %></p>
+    </div>
+    <a href="/" id="back-to-home-button">
+      <button>Back to Home</button>
+    </a>
+  </div>
+</body>
 </html>
