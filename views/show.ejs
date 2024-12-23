@@ -13,8 +13,8 @@
   />
 </head>
 <body>
-  <div class="container">
-    <header>
+  <div id="book-detail-container">
+    <header id="book-detail-header">
       <h1 id="book-title"><%= book.title %></h1>
       <p id="book-read-date">Read on: <%= book.formatted_read_date %></p>
       <p id="book-rating">Rating: <%= book.book_rating %>/10</p>
@@ -25,10 +25,11 @@
       <% } %>
     </div>
     <div id="book-info-section">
-      <h3 id="takeaways-header">Takeaways</h3>
-      <p id="takeaways-content"><%= book.takeaways %></p>
-      <h3 id="content-header">Content</h3>
-      <p id="content-full"><%= book.content %></p>
+    <h3 id="takeaways-header"></h3>
+        <p id="takeaways-content"><%= book.takeaways %></p>
+        <h3 id="content-header"></h3>
+        <p id="content-full"><%= book.content %></p>
+        <!-- Display full content -->
     </div>
     <a href="/" id="back-to-home-button">
       <button>Back to Home</button>
